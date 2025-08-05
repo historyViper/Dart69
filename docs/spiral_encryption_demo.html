@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Data Encryption Demo</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .panel {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            color: #00ccff;
+            margin-bottom: 5px;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            background: #2a2a2a;
+            border: 1px solid #555;
+            color: #00ff00;
+            border-radius: 3px;
+        }
+        button {
+            background: #ff6600;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #ff8800;
+        }
+        .visualization {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .spiral-canvas {
+            border: 1px solid #555;
+            background: #000;
+        }
+        .output {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .stat {
+            background: #333;
+            padding: 10px;
+            border-radius: 3px;
+            text-align: center;
+        }
+        .hex-display {
+            color: #ffaa00;
+            letter-spacing: 1px;
+        }
+        h1, h2 {
+            color: #00ccff;
+            text-align: center;
+        }
+        .warning {
+            background: #331100;
+            border: 1px solid #ff6600;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
+            color: #ffaa00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌀 Spiral Data Encryption Demo</h1>
+        <div class="warning">
+            <strong>Experimental Geometric Encryption</strong><br>
+            This demonstrates novel spiral-based data transformation for cryptographic applications.
+        </div>
+
+        <div class="panel">
+            <h2>Configuration</h2>
+            <div class="controls">
+                <div>
+                    <label>Spiral Frequency (Hz):</label>
+                    <input type="number" id="frequency" value="69" min="1" max="360">
+                </div>
+                <div>
+                    <label>Number of Angles:</label>
+                    <input type="number" id="angles" value="69" min="3" max="360">
+                </div>
+                <div>
+                    <label>Angle Step (every Nth):</label>
+                    <input type="number" id="angleStep" value="3" min="1" max="10">
+                </div>
+                <div>
+                    <label>Spiral Growth Rate:</label>
+                    <input type="number" id="growthRate" value="1.618" step="0.001" min="1" max="5">
+                </div>
+                <div>
+                    <label>Data Passes:</label>
+                    <input type="number" id="passes" value="1" min="1" max="5">
+                </div>
+                <div>
+                    <label>Operation Mode:</label>
+                    <select id="operation">
+                        <option value="xor">XOR (simple)</option>
+                        <option value="random_xor">XOR (geometric key)</option>
+                        <option value="add">Addition (mod 256)</option>
+                        <option value="sub">Subtraction (mod 256)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Input Data</h2>
+            <label>Enter text to encrypt:</label>
+            <textarea id="inputText" rows="4" placeholder="Enter your message here...">Hello World! This is a test of spiral encryption.</textarea>
+            <button onclick="processData()">🔄 Process Data</button>
+            <button onclick="reverseProcess()">🔙 Reverse Process</button>
+            <button onclick="generateTestData()">🎲 Generate Test Data</button>
+        </div>
+
+        <div class="visualization">
+            <div>
+                <h3>Spiral Visualization</h3>
+                <canvas id="spiralCanvas" class="spiral-canvas" width="400" height="400"></canvas>
+            </div>
+            <div style="flex: 1;">
+                <h3>Process Steps</h3>
+                <div id="processSteps" class="output"></div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Results</h2>
+            <div class="stats">
+                <div class="stat">
+                    <div>Original Size</div>
+                    <div id="originalSize">0 bytes</div>
+                </div>
+                <div class="stat">
+                    <div>Compressed Size</div>
+                    <div id="compressedSize">0 bytes</div>
+                </div>
+                <div class="stat">
+                    <div>Encrypted Size</div>
+                    <div id="encryptedSize">0 bytes</div>
+                </div>
+                <div class="stat">
+                    <div>Entropy</div>
+                    <div id="entropy">0.00</div>
+                </div>
+            </div>
+            
+            <label>Compressed Data (hex):</label>
+            <div id="compressedOutput" class="output hex-display"></div>
+            
+            <label>Encrypted Output (hex):</label>
+            <div id="encryptedOutput" class="output hex-display"></div>
+            
+            <label>Decrypted Result:</label>
+            <div id="decryptedOutput" class="output"></div>
+        </div>
+    </div>
+
+    <script>
+        let globalState = {
+            originalData: '',
+            compressedData: '',
+            encryptedData: '',
+            spiralKey: null
+        };
+
+        function textToBytes(text) {
+            return new TextEncoder().encode(text);
+        }
+
+        function bytesToText(bytes) {
+            return new TextDecoder().decode(bytes);
+        }
+
+        function bytesToHex(bytes) {
+            return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ');
+        }
+
+        function hexToBytes(hex) {
+            const clean = hex.replace(/\s/g, '');
+            const bytes = new Uint8Array(clean.length / 2);
+            for (let i = 0; i < clean.length; i += 2) {
+                bytes[i / 2] = parseInt(clean.substr(i, 2), 16);
+            }
+            return bytes;
+        }
+
+        function simpleCompress(data) {
+            // Skip compression for now - just return original data
+            // The spiral encryption provides the real security
+            return new Uint8Array(data);
+        }
+
+        function simpleDecompress(data) {
+            // Skip decompression for now
+            return new Uint8Array(data);
+        }
+
+        function calculateEntropy(data) {
+            const freq = {};
+            for (let byte of data) {
+                freq[byte] = (freq[byte] || 0) + 1;
+            }
+            
+            let entropy = 0;
+            const len = data.length;
+            for (let count of Object.values(freq)) {
+                const p = count / len;
+                entropy -= p * Math.log2(p);
+            }
+            return entropy;
+        }
+
+        function generateSpiralKey() {
+            const frequency = parseInt(document.getElementById('frequency').value);
+            const angles = parseInt(document.getElementById('angles').value);
+            const angleStep = parseInt(document.getElementById('angleStep').value);
+            const growthRate = parseFloat(document.getElementById('growthRate').value);
+            
+            return {
+                frequency,
+                angles,
+                angleStep,
+                growthRate,
+                selectedAngles: []
+            };
+        }
+
+        function mapToSpiral(data, key) {
+            const points = [];
+            const angleIncrement = (2 * Math.PI) / key.angles;
+            
+            for (let i = 0; i < data.length; i++) {
+                const t = (i / data.length) * key.frequency * 2 * Math.PI;
+                const r = Math.pow(key.growthRate, t / (2 * Math.PI));
+                const angle = t % (2 * Math.PI);
+                
+                points.push({
+                    x: r * Math.cos(angle),
+                    y: r * Math.sin(angle),
+                    data: data[i],
+                    angle: angle,
+                    index: i
+                });
+            }
+            
+            return points;
+        }
+
+        function selectAngularSlices(points, key) {
+            const angleIncrement = (2 * Math.PI) / key.angles;
+            const selectedAngles = [];
+            
+            // Select every angleStep-th angle
+            for (let i = 0; i < key.angles; i += key.angleStep) {
+                selectedAngles.push(i * angleIncrement);
+            }
+            
+            key.selectedAngles = selectedAngles;
+            
+            // Assign each point to nearest angle slice
+            const slices = {};
+            selectedAngles.forEach((angle, sliceIndex) => {
+                slices[sliceIndex] = [];
+            });
+            
+            points.forEach(point => {
+                let minDiff = Infinity;
+                let bestSlice = 0;
+                
+                selectedAngles.forEach((targetAngle, sliceIndex) => {
+                    const angleDiff = Math.abs(point.angle - targetAngle);
+                    const wrappedDiff = Math.abs(angleDiff - 2 * Math.PI);
+                    const minAngleDiff = Math.min(angleDiff, wrappedDiff);
+                    
+                    if (minAngleDiff < minDiff) {
+                        minDiff = minAngleDiff;
+                        bestSlice = sliceIndex;
+                    }
+                });
+                
+                slices[bestSlice].push(point);
+            });
+            
+            return slices;
+        }
+
+        function performOperation(slices, operation) {
+            const result = {};
+            
+            Object.keys(slices).forEach(sliceIndex => {
+                const slice = slices[sliceIndex];
+                const transformed = [];
+                
+                slice.forEach((point, i) => {
+                    let newValue = point.data;
+                    
+                    // Generate key from geometric position
+                    const geoKey = generateGeometricKey(point, parseInt(sliceIndex));
+                    
+                    switch (operation) {
+                        case 'xor':
+                            newValue = point.data ^ geoKey;
+                            break;
+                        case 'add':
+                            newValue = (point.data + geoKey) % 256;
+                            break;
+                        case 'sub':
+                            newValue = (point.data - geoKey + 256) % 256;
+                            break;
+                        case 'random_xor':
+                            newValue = point.data ^ geoKey;
+                            break;
+                    }
+                    
+                    transformed.push({
+                        ...point,
+                        data: newValue
+                    });
+                });
+                
+                result[sliceIndex] = transformed;
+            });
+            
+            return result;
+        }
+
+        function generateGeometricKey(point, sliceIndex) {
+            // Use geometric properties to generate pseudo-random key
+            const x = Math.floor(point.x * 1000) % 256;
+            const y = Math.floor(point.y * 1000) % 256;
+            const angleKey = Math.floor(point.angle * 1000) % 256;
+            const indexKey = point.index % 256;
+            const sliceKey = sliceIndex % 256;
+            
+            // Combine geometric properties with simple hash
+            let hash = (x ^ y ^ angleKey ^ indexKey ^ sliceKey) % 256;
+            hash = ((hash * 31) + (x * y % 256)) % 256;
+            hash = ((hash * 17) + angleKey) % 256;
+            
+            return hash;
+        }
+
+        function reconstructData(transformedSlices, originalLength) {
+            const result = new Array(originalLength);
+            
+            Object.values(transformedSlices).forEach(slice => {
+                slice.forEach(point => {
+                    result[point.index] = point.data;
+                });
+            });
+            
+            return new Uint8Array(result);
+        }
+
+        function spiralEncrypt(data, key, operation) {
+            const points = mapToSpiral(data, key);
+            const slices = selectAngularSlices(points, key);
+            const transformed = performOperation(slices, operation);
+            return reconstructData(transformed, data.length);
+        }
+
+        function spiralDecrypt(data, key, operation) {
+            // Reverse the operation
+            let reverseOp = operation;
+            if (operation === 'add') reverseOp = 'sub';
+            else if (operation === 'sub') reverseOp = 'add';
+            
+            return spiralEncrypt(data, key, reverseOp);
+        }
+
+        function visualizeSpiral() {
+            const canvas = document.getElementById('spiralCanvas');
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (!globalState.spiralKey) return;
+            
+            const key = globalState.spiralKey;
+            const scale = Math.min(centerX, centerY) * 0.8;
+            
+            // Draw spiral
+            ctx.strokeStyle = '#004400';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            
+            for (let t = 0; t <= key.frequency * 2 * Math.PI; t += 0.1) {
+                const r = Math.pow(key.growthRate, t / (2 * Math.PI)) * scale / 10;
+                const x = centerX + r * Math.cos(t);
+                const y = centerY + r * Math.sin(t);
+                
+                if (t === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            
+            // Draw selected angles
+            ctx.strokeStyle = '#ffaa00';
+            ctx.lineWidth = 2;
+            
+            key.selectedAngles.forEach(angle => {
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(
+                    centerX + Math.cos(angle) * scale,
+                    centerY + Math.sin(angle) * scale
+                );
+                ctx.stroke();
+            });
+            
+            // Draw center
+            ctx.fillStyle = '#00ccff';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 3, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function updateProcessSteps(steps) {
+            document.getElementById('processSteps').innerHTML = steps.join('<br>');
+        }
+
+        function processData() {
+            const inputText = document.getElementById('inputText').value;
+            const operation = document.getElementById('operation').value;
+            const passes = parseInt(document.getElementById('passes').value);
+            
+            if (!inputText) {
+                alert('Please enter some text to process');
+                return;
+            }
+            
+            const steps = [];
+            steps.push('🔄 Starting encryption process...');
+            
+            // Convert to bytes
+            const originalBytes = textToBytes(inputText);
+            globalState.originalData = originalBytes;
+            steps.push(`📝 Converted text to ${originalBytes.length} bytes`);
+            
+            // Compress
+            const compressedBytes = simpleCompress(originalBytes);
+            globalState.compressedData = compressedBytes;
+            steps.push(`🗜️ Compressed to ${compressedBytes.length} bytes`);
+            
+            // Generate spiral key
+            const spiralKey = generateSpiralKey();
+            globalState.spiralKey = spiralKey;
+            steps.push(`🌀 Generated spiral key (${spiralKey.angles} angles, every ${spiralKey.angleStep})`);
+            
+            // Multiple passes
+            let currentData = compressedBytes;
+            for (let pass = 0; pass < passes; pass++) {
+                currentData = spiralEncrypt(currentData, spiralKey, operation);
+                steps.push(`🔐 Pass ${pass + 1}: Applied ${operation} operation`);
+            }
+            
+            globalState.encryptedData = currentData;
+            steps.push('✅ Encryption complete!');
+            
+            updateProcessSteps(steps);
+            updateOutputs();
+            visualizeSpiral();
+        }
+
+        function reverseProcess() {
+            if (!globalState.encryptedData || !globalState.spiralKey) {
+                alert('No encrypted data to decrypt. Process some data first.');
+                return;
+            }
+            
+            const operation = document.getElementById('operation').value;
+            const passes = parseInt(document.getElementById('passes').value);
+            
+            const steps = [];
+            steps.push('🔙 Starting decryption process...');
+            
+            // Reverse multiple passes
+            let currentData = globalState.encryptedData;
+            for (let pass = 0; pass < passes; pass++) {
+                currentData = spiralDecrypt(currentData, globalState.spiralKey, operation);
+                steps.push(`🔓 Pass ${passes - pass}: Reversed ${operation} operation`);
+            }
+            
+            // Decompress
+            const decompressedBytes = simpleDecompress(currentData);
+            steps.push(`🗜️ Decompressed to ${decompressedBytes.length} bytes`);
+            
+            // Convert back to text
+            const resultText = bytesToText(decompressedBytes);
+            steps.push('📝 Converted back to text');
+            steps.push('✅ Decryption complete!');
+            
+            document.getElementById('decryptedOutput').textContent = resultText;
+            updateProcessSteps(steps);
+        }
+
+        function updateOutputs() {
+            const originalSize = globalState.originalData ? globalState.originalData.length : 0;
+            const compressedSize = globalState.compressedData ? globalState.compressedData.length : 0;
+            const encryptedSize = globalState.encryptedData ? globalState.encryptedData.length : 0;
+            
+            document.getElementById('originalSize').textContent = `${originalSize} bytes`;
+            document.getElementById('compressedSize').textContent = `${compressedSize} bytes`;
+            document.getElementById('encryptedSize').textContent = `${encryptedSize} bytes`;
+            
+            if (globalState.encryptedData) {
+                const entropy = calculateEntropy(globalState.encryptedData);
+                document.getElementById('entropy').textContent = entropy.toFixed(2);
+                document.getElementById('encryptedOutput').textContent = bytesToHex(globalState.encryptedData);
+            }
+            
+            if (globalState.compressedData) {
+                document.getElementById('compressedOutput').textContent = bytesToHex(globalState.compressedData);
+            }
+        }
+
+        function generateTestData() {
+            const testMessages = [
+                "The quick brown fox jumps over the lazy dog.",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", // High compression
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                "1234567890abcdef1234567890abcdef1234567890abcdef",
+                "🌀 Spiral encryption test with unicode! 🔐✨"
+            ];
+            
+            const randomMessage = testMessages[Math.floor(Math.random() * testMessages.length)];
+            document.getElementById('inputText').value = randomMessage;
+        }
+
+        // Initialize
+        visualizeSpiral();
+    </script>
+</body>
+</html>

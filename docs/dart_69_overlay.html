@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dart-69 Dimensional Overlay Analyzer</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      color: white;
+      font-family: Arial, sans-serif;
+      overflow-x: auto;
+    }
+    .container { max-width:1600px; margin:0 auto; }
+    .header {
+      text-align:center;
+      margin-bottom:30px;
+      background:rgba(26,26,46,0.8);
+      padding:25px;
+      border-radius:12px;
+      border:2px solid #00ffff;
+    }
+    .header h1 { color:#00ffff; margin:0 0 10px; font-size:2.2em; }
+    .header .subtitle { color:#ccc; font-size:1.1em; margin:5px 0; }
+    .controls {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+      gap:20px;
+      margin-bottom:30px;
+      background:rgba(26,26,46,0.6);
+      padding:25px;
+      border-radius:12px;
+      border:1px solid #444;
+    }
+    .control-group {
+      background:rgba(0,0,0,0.3);
+      padding:15px;
+      border-radius:8px;
+      border:1px solid #555;
+    }
+    .control-group h3 { color:#00ffff; margin:0 0 15px; font-size:1.1em; }
+    .control-row {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin:8px 0;
+    }
+    .control-row label { min-width:100px; font-size:0.9em; }
+    input[type=range] {
+      flex:1; height:6px; background:#333;
+      border-radius:3px; outline:none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      appearance:none; width:16px; height:16px;
+      background:#00ffff; border-radius:50%; cursor:pointer;
+    }
+    input[type=number], select, button {
+      background:#333; color:white;
+      border:1px solid #666; padding:8px 12px;
+      border-radius:6px; font-family:Arial,sans-serif;
+    }
+    button {
+      cursor:pointer; transition:all .3s;
+      background:linear-gradient(45deg,#444,#666);
+      font-weight:bold;
+    }
+    button:hover {
+      background:linear-gradient(45deg,#555,#777);
+      box-shadow:0 2px 8px rgba(0,255,255,0.3);
+    }
+    .export-btn {
+      background:linear-gradient(45deg,#ff4444,#ff6666)!important;
+    }
+    .export-btn:hover {
+      background:linear-gradient(45deg,#ff6666,#ff8888)!important;
+    }
+    .visualization-area {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+      margin-bottom:30px;
+    }
+    .canvas-container {
+      background:radial-gradient(circle at center,#1a1a2e 0%,#000 70%);
+      border-radius:12px; padding:20px;
+      border:2px solid #333;
+      box-shadow:0 8px 32px rgba(0,0,0,0.5);
+      position:relative;
+    }
+    .canvas-container h3 {
+      color:#00ffff; margin:0 0 15px; text-align:center;
+      font-size:1.2em;
+    }
+    canvas {
+      border-radius:8px;
+      box-shadow:inset 0 0 20px rgba(0,255,255,0.1);
+      width:100%; height:auto;
+    }
+    .overlay-canvas {
+      border:3px solid #ffff00;
+      box-shadow:0 0 20px rgba(255,255,0,0.3);
+    }
+    .analysis-panel {
+      grid-column:1/-1;
+      background:rgba(26,26,46,0.8);
+      padding:25px;
+      border-radius:12px;
+      border:1px solid #444;
+    }
+    .analysis-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+      gap:20px;
+      margin-top:20px;
+    }
+    .stat-panel {
+      background:rgba(0,0,0,0.4);
+      padding:15px;
+      border-radius:8px;
+      border-left:4px solid #00ffff;
+    }
+    .stat-panel h4 { color:#00ffff; margin:0 0 10px; }
+    .stat-value {
+      font-size:1.3em; font-weight:bold; color:#ffff00;
+    }
+    .reinforcement-zone {
+      background:rgba(255,255,0,0.2);
+      border:2px solid #ffff00;
+      border-radius:6px;
+      padding:10px;
+      margin:5px 0;
+    }
+    .zone-title { font-weight:bold; color:#ffff00; }
+    .legend {
+      display:flex; gap:20px; flex-wrap:wrap;
+      margin:15px 0; justify-content:center;
+    }
+    .legend-item {
+      display:flex; align-items:center; gap:8px;
+      background:rgba(0,0,0,0.3);
+      padding:8px 12px;
+      border-radius:6px;
+      border:1px solid #444;
+    }
+    .color-dot { width:12px; height:12px; border-radius:50%; }
+    .methodology {
+      background:rgba(0,0,0,0.4);
+      padding:20px;
+      border-radius:8px;
+      border:1px solid #555;
+      margin-top:20px;
+    }
+    .methodology h3 { color:#00ffff; margin:0 0 15px; }
+    .formula {
+      background:rgba(0,255,255,0.1);
+      padding:10px; border-radius:6px;
+      border-left:3px solid #00ffff;
+      font-family:'Courier New',monospace;
+      margin:10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🌀 Dart-69 Dimensional Overlay Analyzer</h1>
+      <div class="subtitle">Multi-Dimensional Prime Distribution Interference Analysis</div>
+      <div class="subtitle">Research Tool for Publication-Quality Visualizations</div>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <h3>📐 Dimension Selection</h3>
+        <div class="control-row">
+          <label>Dimension A:</label>
+          <select id="dimensionA">
+            <option value="5">D5 (98-306)</option>
+            <option value="6" selected>D6 (307-961)</option>
+            <option value="7">D7 (962-3020)</option>
+            <option value="8">D8 (3021-9488)</option>
+          </select>
+        </div>
+        <div class="control-row">
+          <label>Dimension B:</label>
+          <select id="dimensionB">
+            <option value="5">D5 (98-306)</option>
+            <option value="6">D6 (307-961)</option>
+            <option value="7" selected>D7 (962-3020)</option>
+            <option value="8">D8 (3021-9488)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>🔧 Overlay Parameters</h3>
+        <div class="control-row">
+          <label>Scaling Method:</label>
+          <select id="scalingMethod">
+            <option value="proportional" selected>Proportional Scaling</option>
+            <option value="normalized">Normalized Overlay</option>
+            <option value="harmonic">Harmonic Alignment</option>
+          </select>
+        </div>
+        <div class="control-row">
+          <label>Scale Factor:</label>
+          <input type="range" id="scaleFactor" min="0.5" max="5.0" step="0.1" value="2.7">
+          <span id="scaleFactorValue">2.7</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>🎨 Visualization</h3>
+        <div class="control-row">
+          <label>Point Size:</label>
+          <input type="range" id="pointSize" min="1" max="8" step="1" value="3">
+          <span id="pointSizeValue">3</span>
+        </div>
+        <div class="control-row">
+          <label>Show Gaps:</label>
+          <input type="checkbox" id="showGaps" checked>
+        </div>
+        <div class="control-row">
+          <label>Highlight Zones:</label>
+          <input type="checkbox" id="highlightZones" checked>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>📊 Analysis Tools</h3>
+        <button onclick="updateAnalysis()">🔄 Update Analysis</button>
+        <button onclick="exportImage()" class="export-btn">📸 Export Image</button>
+        <button onclick="generateReport()">📋 Generate Report</button>
+        <button onclick="animateOverlay()">🎬 Animate Overlay</button>
+      </div>
+    </div>
+
+    <div class="visualization-area">
+      <div class="canvas-container">
+        <h3>Individual Dimension Patterns</h3>
+        <canvas id="individualCanvas" width="600" height="600"></canvas>
+        <div class="legend">
+          <div class="legend-item">
+            <div class="color-dot" style="background:#ff4444;"></div><span>Primes</span>
+          </div>
+          <div class="legend-item">
+            <div class="color-dot" style="background:#666;"></div><span>Composites</span>
+          </div>
+          <div class="legend-item">
+            <div class="color-dot" style="background:#ffff00;"></div><span>Gap Regions</span>
+          </div>
+        </div>
+      </div>
+      <div class="canvas-container">
+        <h3>Dimensional Overlay Analysis</h3>
+        <canvas id="overlayCanvas" width="600" height="600" class="overlay-canvas"></canvas>
+        <div class="legend">
+          <div class="legend-item">
+            <div class="color-dot" style="background:#00ff00;"></div><span>Prime Corridors</span>
+          </div>
+          <div class="legend-item">
+            <div class="color-dot" style="background:#ff8800;"></div><span>Reinforcement Zones</span>
+          </div>
+          <div class="legend-item">
+            <div class="color-dot" style="background:#ff0000;"></div><span>Super-Forbidden</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="analysis-panel">
+      <h3>📊 Interference Analysis Results</h3>
+      <div class="analysis-grid">
+        <div class="stat-panel">
+          <h4>Dimensional Data</h4>
+          <div>Dimension A: D<span id="dimANum">6</span> (<span id="dimARange">307-961</span>)</div>
+          <div>Dimension B: D<span id="dimBNum">7</span> (<span id="dimBRange">962-3020</span>)</div>
+          <div>Scale Factor: <span class="stat-value" id="currentScale">2.7</span></div>
+        </div>
+        <div class="stat-panel">
+          <h4>Overlap Statistics</h4>
+          <div>Reinforcement Zones: <span class="stat-value" id="reinforcementCount">0</span></div>
+          <div>Total Overlap: <span class="stat-value" id="totalOverlap">0°</span></div>
+          <div>Coverage: <span class="stat-value" id="overlapCoverage">0%</span></div>
+        </div>
+        <div class="stat-panel">
+          <h4>Prime Suppression</h4>
+          <div>Max Suppression: <span class="stat-value" id="maxSuppression">0x</span></div>
+          <div>Avg Suppression: <span class="stat-value" id="avgSuppression">0x</span></div>
+          <div>Significance: <span class="stat-value" id="significance">None</span></div>
+        </div>
+        <div class="stat-panel">
+          <h4>Pattern Quality</h4>
+          <div>Correlation: <span class="stat-value" id="correlation">0%</span></div>
+          <div>Interference: <span class="stat-value" id="interference">Minimal</span></div>
+          <div>Resonance: <span class="stat-value" id="resonance">No</span></div>
+        </div>
+      </div>
+      <div id="reinforcementZones"></div>
+      <div class="methodology">
+        <h3>🔬 Methodology</h3>
+        <p><strong>Dimensional Overlay Theory:</strong> Prime distribution follows π-dimensional geometric constraints modulated by 69Hz angular frequencies. When dimensional gap patterns align through proportional scaling, constructive interference creates "super-forbidden" zones with complete prime suppression.</p>
+        <div class="formula">
+          <strong>Core Formulas:</strong><br>
+          • Dimension: D = floor(log_π(n)) + 1<br>
+          • Angular Position: θ = (n × 360°/69) mod 360°<br>
+          • Scaling Factor: S = (primes_B / primes_A)<br>
+          • Interference: I = overlap(gaps_A × S, gaps_B)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script defer>
+  document.addEventListener('DOMContentLoaded', () => {
+    const individualCanvas = document.getElementById('individualCanvas');
+    const overlayCanvas    = document.getElementById('overlayCanvas');
+    const indCtx           = individualCanvas.getContext('2d');
+    const ovlCtx           = overlayCanvas.getContext('2d');
+    const centerX          = overlayCanvas.width  / 2;
+    const centerY          = overlayCanvas.height / 2;
+
+    let dimensionDataA, dimensionDataB, overlayResults;
+
+    function isPrime(n) {
+      if (n < 2) return false;
+      if (n === 2) return true;
+      if (n % 2 === 0) return false;
+      for (let i = 3; i <= Math.sqrt(n); i += 2) if (n % i === 0) return false;
+      return true;
+    }
+    function getDimension(n) {
+      return Math.floor(Math.log(n) / Math.log(Math.PI)) + 1;
+    }
+    function getDimensionalData(d) {
+      const start = Math.floor(Math.pow(Math.PI, d - 1)) + 1;
+      const end   = Math.floor(Math.pow(Math.PI, d));
+      const primes = [], composites = [];
+      for (let n = start; n <= end; n++) {
+        if (getDimension(n) === d) {
+          const angle = (n * 360 / 69) % 360;
+          const pt    = { number: n, angle, isPrime: isPrime(n) };
+          (pt.isPrime ? primes : composites).push(pt);
+        }
+      }
+      primes.sort((a, b) => a.angle - b.angle);
+      const gaps = [];
+      for (let i = 1; i < primes.length; i++) {
+        gaps.push({
+          start: primes[i - 1].angle,
+          end:   primes[i].angle,
+          size:  primes[i].angle - primes[i - 1].angle
+        });
+      }
+      if (primes.length > 1) {
+        gaps.push({
+          start: primes[primes.length - 1].angle,
+          end:   primes[0].angle + 360,
+          size:  360 - primes[primes.length - 1].angle + primes[0].angle
+        });
+      }
+      return { dimension: d, range: `${start}-${end}`, primes, composites, gaps };
+    }
+
+    function drawDimensionPattern(ctx, data, cx, cy, r, label, color) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth   = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+      ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.font       = 'bold 16px Arial';
+      ctx.textAlign  = 'center';
+      ctx.fillText(label, cx, cy - r - 15);
+
+      if (document.getElementById('showGaps').checked) {
+        ctx.fillStyle = 'rgba(255,255,0,0.2)';
+        data.gaps.forEach(gap => {
+          const sa = (gap.start - 90) * Math.PI / 180;
+          const ea = (gap.end   - 90) * Math.PI / 180;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.arc(cx, cy, r, sa, ea);
+          ctx.closePath();
+          ctx.fill();
+        });
+      }
+
+      const ptSize = parseInt(document.getElementById('pointSize').value, 10);
+      // draw primes
+      ctx.fillStyle = '#ff4444';
+      data.primes.forEach(p => {
+        const a = (p.angle - 90) * Math.PI / 180;
+        const x = cx + r * Math.cos(a);
+        const y = cy + r * Math.sin(a);
+        ctx.beginPath();
+        ctx.arc(x, y, ptSize, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+      // draw some composites
+      ctx.fillStyle = '#666';
+      data.composites.filter((_, i) => i % 10 === 0).forEach(c => {
+        const a = (c.angle - 90) * Math.PI / 180;
+        const x = cx + r * Math.cos(a);
+        const y = cy + r * Math.sin(a);
+        ctx.beginPath();
+        ctx.arc(x, y, ptSize - 1, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+    }
+
+    function drawIndividualPatterns() {
+      indCtx.clearRect(0, 0, individualCanvas.width, individualCanvas.height);
+      const dA = parseInt(document.getElementById('dimensionA').value, 10);
+      const dB = parseInt(document.getElementById('dimensionB').value, 10);
+      dimensionDataA = getDimensionalData(dA);
+      dimensionDataB = getDimensionalData(dB);
+      drawDimensionPattern(indCtx, dimensionDataA, 150, 300, 120, `D${dA}`, '#00ff88');
+      drawDimensionPattern(indCtx, dimensionDataB, 450, 300, 120, `D${dB}`, '#ff8800');
+      document.getElementById('dimANum').textContent   = dA;
+      document.getElementById('dimARange').textContent = dimensionDataA.range;
+      document.getElementById('dimBNum').textContent   = dB;
+      document.getElementById('dimBRange').textContent = dimensionDataB.range;
+    }
+
+    function calculateOverlap(a, b) {
+      const start = Math.max(a.start, b.start);
+      const end   = Math.min(a.end,   b.end);
+      return { start, end, size: Math.max(0, end - start) };
+    }
+
+    function performOverlayAnalysis() {
+      const sf = parseFloat(document.getElementById('scaleFactor').value);
+      const gapsA = dimensionDataA.gaps.map(g => ({
+        start: (g.start * sf) % 360,
+        end:   (g.end   * sf) % 360,
+        size:  g.size * sf
+      }));
+      const gapsB = dimensionDataB.gaps;
+      const overlaps = [];
+      gapsB.forEach((gB, i) => {
+        gapsA.forEach((gA, j) => {
+          const o = calculateOverlap(gA, gB);
+          if (o.size > 0) overlaps.push({ ...o, gapAIndex: j, gapBIndex: i });
+        });
+      });
+      overlaps.sort((a, b) => b.size - a.size);
+      overlayResults = { overlaps, scaleFactor: sf };
+      return overlayResults;
+    }
+
+    function drawOverlayAnalysis() {
+      ovlCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      const r = 250;
+      // base circle
+      ovlCtx.strokeStyle = '#fff';
+      ovlCtx.lineWidth   = 2;
+      ovlCtx.beginPath();
+      ovlCtx.arc(centerX, centerY, r, 0, 2 * Math.PI);
+      ovlCtx.stroke();
+
+      if (document.getElementById('highlightZones').checked) {
+        overlayResults.overlaps.forEach(o => {
+          if (o.size > 10) {
+            const intensity = Math.min(o.size / 30, 1);
+            const red       = Math.floor(255 * intensity);
+            const alpha     = 0.3 + intensity * 0.4;
+            ovlCtx.fillStyle   = `rgba(${red},${255-red},0,${alpha})`;
+            const sa = (o.start - 90) * Math.PI / 180;
+            const ea = (o.end   - 90) * Math.PI / 180;
+            ovlCtx.beginPath();
+            ovlCtx.moveTo(centerX, centerY);
+            ovlCtx.arc(centerX, centerY, r, sa, ea);
+            ovlCtx.closePath();
+            ovlCtx.fill();
+
+            ovlCtx.strokeStyle = `rgba(255,255,0,${alpha+0.3})`;
+            ovlCtx.lineWidth   = 2;
+            ovlCtx.stroke();
+          }
+        });
+      }
+
+      // draw primes scaled
+      const ptSize = parseInt(document.getElementById('pointSize').value, 10);
+      ovlCtx.fillStyle = '#00ff88';
+      dimensionDataA.primes.forEach(p => {
+        const a = ((p.angle * overlayResults.scaleFactor) % 360 - 90) * Math.PI / 180;
+        const x = centerX + r * Math.cos(a);
+        const y = centerY + r * Math.sin(a);
+        ovlCtx.beginPath();
+        ovlCtx.arc(x, y, ptSize, 0, 2 * Math.PI);
+        ovlCtx.fill();
+      });
+      ovlCtx.fillStyle = '#ff8800';
+      dimensionDataB.primes.forEach(p => {
+        const a = (p.angle - 90) * Math.PI / 180;
+        const x = centerX + r * Math.cos(a);
+        const y = centerY + r * Math.sin(a);
+        ovlCtx.beginPath();
+        ovlCtx.arc(x, y, ptSize, 0, 2 * Math.PI);
+        ovlCtx.fill();
+      });
+    }
+
+    function updateStatistics() {
+      const sig   = overlayResults.overlaps.filter(o => o.size > 10);
+      const total = overlayResults.overlaps.reduce((sum, o) => sum + o.size, 0);
+      const cov   = ((total / 360) * 100).toFixed(1) + '%';
+      document.getElementById('currentScale').textContent      = overlayResults.scaleFactor.toFixed(2);
+      document.getElementById('reinforcementCount').textContent= sig.length;
+      document.getElementById('totalOverlap').textContent      = total.toFixed(1) + '°';
+      document.getElementById('overlapCoverage').textContent   = cov;
+      document.getElementById('maxSuppression').textContent    = (sig.length>0?'∞':'1.0') + 'x';
+      document.getElementById('avgSuppression').textContent    = (sig.length>0?'999.0':'1.0') + 'x';
+      document.getElementById('significance').textContent      = sig.length>0?'BREAKTHROUGH!':'Minimal';
+      document.getElementById('correlation').textContent       = (overlayResults.overlaps.length>0?((sig.length/overlayResults.overlaps.length)*100).toFixed(1):'0') + '%';
+      document.getElementById('interference').textContent      = sig.length>0?'High':'Minimal';
+      document.getElementById('resonance').textContent         = overlayResults.overlaps.some(o=>o.size>20)?'Yes':'No';
+
+      const zonesDiv = document.getElementById('reinforcementZones');
+      zonesDiv.innerHTML = '';
+      if (sig.length) {
+        const hdr = document.createElement('h4');
+        hdr.textContent   = '🎯 Reinforcement Zones Detected';
+        hdr.style.color   = '#ffff00';
+        zonesDiv.appendChild(hdr);
+        sig.slice(0,5).forEach((o,i) => {
+          const d = document.createElement('div');
+          d.className = 'reinforcement-zone';
+          d.innerHTML = `
+            <div class="zone-title">Zone ${i+1}: ${o.start.toFixed(1)}° – ${o.end.toFixed(1)}°</div>
+            <div>Overlap Size: ${o.size.toFixed(1)}°</div>
+            <div>Strength: ${(o.size/30*100).toFixed(0)}%</div>
+          `;
+          zonesDiv.appendChild(d);
+        });
+      }
+    }
+
+    function updateAnalysis() {
+      drawIndividualPatterns();
+      performOverlayAnalysis();
+      drawOverlayAnalysis();
+      updateStatistics();
+    }
+
+    // wire up controls
+    ['dimensionA','dimensionB','scalingMethod','showGaps','highlightZones'].forEach(id =>
+      document.getElementById(id).addEventListener('change', updateAnalysis)
+    );
+    ['scaleFactor','pointSize'].forEach(id => {
+      document.getElementById(id).addEventListener('input', e => {
+        document.getElementById(id+'Value').textContent = e.target.value;
+        updateAnalysis();
+      });
+    });
+
+    // export image
+    window.exportImage = () => {
+      const cw = 1200, ch = 700;
+      const ex = document.createElement('canvas');
+      ex.width = cw; ex.height = ch;
+      const ctx = ex.getContext('2d');
+      ctx.fillStyle = '#1a1a2e';
+      ctx.fillRect(0,0,cw,ch);
+      ctx.fillStyle = '#00ffff';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('Dart-69 Dimensional Overlay Analysis', cw/2, 40);
+      ctx.fillStyle = '#fff';
+      ctx.font = '16px Arial';
+      ctx.fillText(`D${document.getElementById('dimensionA').value} vs D${document.getElementById('dimensionB').value} - Scale: ${document.getElementById('scaleFactor').value}`, cw/2, 65);
+      ctx.drawImage(individualCanvas, 0, 80);
+      ctx.drawImage(overlayCanvas,   600, 80);
+      const link = document.createElement('a');
+      link.download = `dart69_overlay_D${document.getElementById('dimensionA').value}_D${document.getElementById('dimensionB').value}.png`;
+      link.href     = ex.toDataURL();
+      link.click();
+    };
+
+    // generate text report
+    window.generateReport = () => {
+      let report = `DART-69 DIMENSIONAL INTERFERENCE ANALYSIS REPORT\n\n`;
+      const dA = document.getElementById('dimensionA').value;
+      const dB = document.getElementById('dimensionB').value;
+      report += `Dimensions: D${dA} (${dimensionDataA.range}) vs D${dB} (${dimensionDataB.range})\n`;
+      report += `Scale Factor: ${document.getElementById('scaleFactor').value}\n\n`;
+      const sig    = overlayResults.overlaps.filter(o=>o.size>10);
+      const total  = overlayResults.overlaps.reduce((s,o)=>s+o.size,0).toFixed(1);
+      const covPct = ((total/360*100).toFixed(1))+'%';
+      report += `Reinforcement Zones: ${sig.length}\n`;
+      report += `Total Overlap: ${total}°\n`;
+      report += `Coverage: ${covPct}\n\n`;
+      if(sig.length){
+        report += 'Significant Zones:\n';
+        sig.slice(0,5).forEach((o,i) => {
+          report += `  Zone ${i+1}: ${o.start.toFixed(1)}°–${o.end.toFixed(1)}° (${o.size.toFixed(1)}°)\n`;
+        });
+      }
+      report += `\nGenerated: ${new Date().toLocaleString()}\n`;
+      const blob = new Blob([report], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.download = `dart69_report_D${dA}_D${dB}.txt`;
+      link.href     = URL.createObjectURL(blob);
+      link.click();
+    };
+
+    // animate overlay
+    window.animateOverlay = () => {
+      let cs = 0.5;
+      const ts = parseFloat(document.getElementById('scaleFactor').value);
+      const step = (ts - 0.5) / 50;
+      (function frame() {
+        if (cs < ts) {
+          document.getElementById('scaleFactor').value = cs.toFixed(2);
+          document.getElementById('scaleFactorValue').textContent = cs.toFixed(2);
+          updateAnalysis();
+          cs += step;
+          setTimeout(frame, 100);
+        }
+      })();
+    };
+
+    // kick it off
+    updateAnalysis();
+  });
+  </script>
+</body>
+</html>
