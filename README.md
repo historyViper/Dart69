@@ -8,7 +8,7 @@
 
 ## Abstract
 
-We introduce a logarithmic classification system organizing integers by π-dimensional scaling: D(n) = ⌊log_π(n)⌋ + 1. Analysis of prime distribution across these dimensional ranges reveals consistent scaling relationships with exponent α ≈ 0.87. Validation against established computational records including Büthe-Platt π(10^24) calculations and Baugh-Walisch π(10^29) computations confirms pattern consistency across 48 π-dimensional ranges spanning 24 orders of magnitude. The framework demonstrates reproducible mathematical structure in prime number distribution, suggesting previously unrecognized organizational principles warranting further theoretical investigation.
+We introduce a logarithmic classification system organizing integers by π-dimensional scaling: d(n) = ⌊ log(n) / log(π) ⌋ + 1. Analysis of prime distribution across these dimensional ranges reveals consistent scaling relationships with exponent α ≈ 0.87. Validation against established computational records including Büthe-Platt π(10^24) calculations and Baugh-Walisch π(10^29) computations confirms pattern consistency across 48 π-dimensional ranges spanning 24 orders of magnitude. The framework demonstrates reproducible mathematical structure in prime number distribution, suggesting previously unrecognized organizational principles warranting further theoretical investigation.
 
 **Keywords:** prime distribution, dimensional classification, computational number theory, scaling relationships
 
@@ -26,7 +26,7 @@ This paper introduces a novel classification system based on logarithmic π-dime
 
 **Initial Observation:** Working with computational systems, I noticed that mathematical patterns often emerge when data is organized by natural scaling factors. This led to the hypothesis that prime numbers might exhibit structure when grouped by logarithmic ranges based on mathematical constants.
 
-**Why π as the Base?** The choice of π emerged from practical experimentation - if mathematical constants govern natural patterns, then π (fundamental to geometry and analysis) seemed a logical candidate for organizing number sequences. Using D(n) = ⌊log_π(n)⌋ + 1 creates ranges that scale naturally: each dimension contains approximately π times more integers than the previous.
+**Why π as the Base?** The choice of π emerged from practical experimentation - if mathematical constants govern natural patterns, then π (fundamental to geometry and analysis) seemed a logical candidate for organizing number sequences. Using d(n) = ⌊ log(n) / log(π) ⌋ + 1 creates ranges that scale naturally: each dimension contains approximately π times more integers than the previous.
 
 **The "Aha" Moment:** When plotting prime distribution across these π-dimensional ranges, a consistent scaling pattern emerged with exponent α ≈ 0.87. This wasn't random fluctuation - it held across multiple dimensions with remarkable consistency.
 
@@ -46,7 +46,7 @@ Rather than relying solely on new computations, we validate these intuitively di
 
 **Definition 2.1.** For any integer n ≥ 2, its π-dimensional class is:
 ```
-D(n) = ⌊log_π(n)⌋ + 1
+d(n) = ⌊ log(n) / log(π) ⌋ + 1
 ```
 
 This partitions positive integers into ranges where dimension D_k contains integers from ⌊π^(k-1)⌋ + 1 to ⌊π^k⌋.
