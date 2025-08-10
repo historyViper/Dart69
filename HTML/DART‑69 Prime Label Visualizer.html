@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DART‑69 Prime Label Visualizer</title>
+  <style>
+    body {
+      background: #0d1117;
+      color: white;
+      font-family: monospace;
+      text-align: center;
+    }
+    canvas {
+      background: #1a1a1a;
+      border: 1px solid #444;
+      margin: 1rem auto;
+      display: block;
+    }
+    #tooltip {
+      position: absolute;
+      background: rgba(0,0,0,0.85);
+      color: #00ffff;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: monospace;
+      pointer-events: none;
+      visibility: hidden;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>DART‑69: Prime Angle Label Visualizer</h1>
+  <p>Hover over a dot to see its prime and dimension</p>
+
+  <canvas id="lineCanvas" width="1000" height="600"></canvas>
+  <div id="tooltip"></div>
+
+  <script>
+    const canvas = document.getElementById("lineCanvas");
+    const ctx = canvas.getContext("2d");
+    const tooltip = document.getElementById("tooltip");
+
+    const PI = Math.PI;
+    const ANGLE_UNIT = 360 / 69;
+    const MAX_DIM = 12;
+    const DIM_COLORS = [
+      "#66ffcc", "#66ccff", "#cc99ff", "#ff99cc", "#ffff66", "#66ff66",
+      "#ff6666", "#00ffff", "#ff9900", "#9999ff", "#ffcc00", "#00ffcc"
+    ];
+
+    const primesData = [];
+
+    function isPrime(n) {
+      if (n < 2) return false;
+      for (let i = 2, sqrt = Math.sqrt(n); i <= sqrt; i++)
+        if (n % i === 0) return false;
+      return true;
+    }
+
+    function getDimension(n) {
+      return Math.floor(Math.log(n) / Math.log(PI)) + 1;
+    }
+
+    function drawLinearDART() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      primesData.length = 0;
+
+      const margin = 40;
+      const lineHeight = (canvas.height - margin * 2) / MAX_DIM;
+      const angleScale = canvas.width / 360;
+
+      for (let dim = 1; dim <= MAX_DIM; dim++) {
+        const y = margin + (dim - 1) * lineHeight + lineHeight / 2;
+        ctx.strokeStyle = DIM_COLORS[dim - 1];
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+        ctx.fillStyle = DIM_COLORS[dim - 1];
+        ctx.fillText("D" + dim, 5, y - 5);
+      }
+
+      const upperLimit = Math.floor(Math.pow(PI, MAX_DIM));
+      for (let n = 2; n <= upperLimit; n++) {
+        if (!isPrime(n)) continue;
+        const dim = getDimension(n);
+        if (dim > MAX_DIM) continue;
+
+        const angle = (n * ANGLE_UNIT) % 360;
+        const x = angle * angleScale;
+        const y = margin + (dim - 1) * lineHeight + lineHeight / 2;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 2.5, 0, 2 * PI);
+        ctx.fillStyle = DIM_COLORS[dim - 1];
+        ctx.fill();
+
+        primesData.push({ x, y, n, dim });
+      }
+    }
+
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      let found = false;
+      for (const p of primesData) {
+        const dx = p.x - mouseX;
+        const dy = p.y - mouseY;
+        if (dx * dx + dy * dy < 25) { // within ~5px
+          tooltip.style.left = `${e.clientX + 10}px`;
+          tooltip.style.top = `${e.clientY + 10}px`;
+          tooltip.style.visibility = "visible";
+          tooltip.innerText = `Prime: ${p.n} (D${p.dim})`;
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        tooltip.style.visibility = "hidden";
+      }
+    });
+
+    canvas.addEventListener("mouseleave", () => {
+      tooltip.style.visibility = "hidden";
+    });
+
+    drawLinearDART();
+  </script>
+
+</body>
+</html>
