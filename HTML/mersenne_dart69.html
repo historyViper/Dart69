@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mersenne-Dart69 Intersection Mapper</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff88;
+            margin: 0;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #00ffff;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .prize-info {
+            background: #1a3300;
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px auto;
+            max-width: 800px;
+            text-align: center;
+        }
+        
+        .controls {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        button {
+            background: #006600;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+        }
+        
+        button:hover {
+            background: #008800;
+        }
+        
+        input[type="number"], input[type="range"] {
+            background: #333;
+            color: #00ff88;
+            border: 1px solid #555;
+            padding: 8px;
+            margin: 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .chart-container {
+            background: #111;
+            border: 2px solid #444;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        
+        canvas {
+            background: #000;
+            border: 1px solid #333;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .analysis {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .mersenne-list {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .pattern-prediction {
+            background: #003300;
+            border-left: 4px solid #00ff00;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: #00ff88;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #00ff88;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+        }
+        
+        @media (max-width: 800px) {
+            .controls {
+                font-size: 0.9em;
+            }
+            
+            canvas {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎯 Mersenne-Dart69 Intersection Mapper</h1>
+        <div class="prize-info">
+            <strong>💰 GIMPS PRIZES: $3K-$250K for finding new Mersenne primes!</strong><br>
+            Only 51 known Mersenne primes found so far. Can dart-69 predict the next ones?
+        </div>
+    </div>
+
+    <div class="controls">
+        <label>Max Power to Test: <input type="number" id="maxPower" value="100" min="10" max="1000"></label>
+        <label>Zoom Level: <input type="range" id="zoomLevel" min="1" max="10" value="5"></label>
+        <span id="zoomValue">5x</span><br>
+        
+        <button onclick="generateMap()">🎯 Generate Intersection Map</button>
+        <button onclick="analyzePredictions()">🔍 Analyze Patterns</button>
+        <button onclick="exportCandidates()">📋 Export Prime Candidates</button>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="intersectionChart" width="1200" height="600"></canvas>
+    <div class="tooltip" id="tooltip"></div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ff0000;"></div>
+                <span>Known Mersenne Primes</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffff00;"></div>
+                <span>Composite Mersenne Numbers</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #00ff00;"></div>
+                <span>Untested Candidates</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ff00ff;"></div>
+                <span>Forbidden Zone</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="analysis" id="analysisResults">
+        <h3>🔍 Pattern Analysis</h3>
+        <p>Generate the intersection map to see the analysis...</p>
+    </div>
+
+    <script>
+        // Known Mersenne primes (exponents)
+        const knownMersennePrimes = [
+            2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 1279, 
+            2203, 2281, 3217, 4253, 4423, 9689, 9941, 11213, 19937, 21701, 
+            23209, 44497, 86243, 110503, 132049, 216091, 756839, 859433, 
+            1257787, 1398269, 2976221, 3021377, 6972593, 13466917, 20996011, 
+            24036583, 25964951, 30402457, 32582657, 37156667, 42643801, 
+            43112609, 57885161, 74207281, 77232917, 82589933
+        ];
+
+        let intersectionData = [];
+        let canvas, ctx;
+        let tooltip;
+
+        function initCanvas() {
+            canvas = document.getElementById('intersectionChart');
+            ctx = canvas.getContext('2d');
+            tooltip = document.getElementById('tooltip');
+            
+            // Add mouse event listeners for tooltip
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseleave', hideTooltip);
+        }
+
+        // Calculate 2^x - 1 mod 69 efficiently using modular exponentiation
+        function mersenneMod69(x) {
+            if (x === 1) return 1;
+            
+            // Use modular exponentiation: (2^x - 1) mod 69
+            let result = 1;
+            let base = 2;
+            let exp = x;
+            const mod = 69;
+            
+            // Fast modular exponentiation
+            while (exp > 0) {
+                if (exp % 2 === 1) {
+                    result = (result * base) % mod;
+                }
+                base = (base * base) % mod;
+                exp = Math.floor(exp / 2);
+            }
+            
+            return (result - 1 + mod) % mod;
+        }
+
+        function isDart69Forbidden(position) {
+            // Every 3rd position is forbidden, except 3 and 23 in early cases
+            return position % 3 === 0 && position !== 3 && position !== 23;
+        }
+
+        function generateMap() {
+            const maxPower = parseInt(document.getElementById('maxPower').value);
+            
+            console.log(`Generating map for powers 1 to ${maxPower}...`);
+            
+            intersectionData = [];
+            
+            // Calculate intersection points
+            for (let x = 1; x <= maxPower; x++) {
+                const position = mersenneMod69(x);
+                const isKnownPrime = knownMersennePrimes.includes(x);
+                const isForbidden = isDart69Forbidden(position);
+                
+                intersectionData.push({
+                    x: x,
+                    position: position,
+                    isKnownPrime: isKnownPrime,
+                    isForbidden: isForbidden,
+                    angle: position * (360 / 69)
+                });
+
+                // Progress for large calculations
+                if (x % 100 === 0) {
+                    console.log(`Processed ${x}/${maxPower} powers...`);
+                }
+            }
+
+            drawChart();
+            updateAnalysis();
+        }
+
+        function drawChart() {
+            if (!ctx) initCanvas();
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const maxPower = Math.max(...intersectionData.map(d => d.x));
+            const zoom = parseInt(document.getElementById('zoomLevel').value);
+            
+            // Chart dimensions
+            const margin = 60;
+            const chartWidth = canvas.width - 2 * margin;
+            const chartHeight = canvas.height - 2 * margin;
+            
+            // Scales
+            const xScale = chartWidth / maxPower * zoom;
+            const yScale = chartHeight / 69;
+            
+            // Draw grid
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            // Horizontal lines (dart-69 positions)
+            for (let pos = 0; pos <= 69; pos += 3) {
+                const y = margin + pos * yScale;
+                ctx.beginPath();
+                ctx.moveTo(margin, y);
+                ctx.lineTo(canvas.width - margin, y);
+                ctx.stroke();
+            }
+            
+            // Vertical lines (powers)
+            for (let x = 0; x <= maxPower; x += Math.max(1, Math.floor(maxPower / 20))) {
+                const xPos = margin + x * xScale;
+                if (xPos <= canvas.width - margin) {
+                    ctx.beginPath();
+                    ctx.moveTo(xPos, margin);
+                    ctx.lineTo(xPos, canvas.height - margin);
+                    ctx.stroke();
+                }
+            }
+
+            // Draw forbidden zones
+            ctx.fillStyle = 'rgba(255, 0, 255, 0.1)';
+            for (let pos = 0; pos < 69; pos += 3) {
+                if (pos !== 3 && pos !== 23) {
+                    const y = margin + pos * yScale;
+                    ctx.fillRect(margin, y - 2, chartWidth, 4);
+                }
+            }
+
+            // Draw intersection points
+            intersectionData.forEach(point => {
+                const x = margin + point.x * xScale;
+                const y = margin + point.position * yScale;
+                
+                if (x > canvas.width - margin) return; // Skip if off screen
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                
+                if (point.isKnownPrime) {
+                    ctx.fillStyle = '#ff0000'; // Red for known Mersenne primes
+                } else if (point.isForbidden) {
+                    ctx.fillStyle = '#ff00ff'; // Magenta for forbidden positions
+                } else {
+                    // Check if it's a small composite we know about
+                    if (point.x <= 100 && !point.isKnownPrime) {
+                        ctx.fillStyle = '#ffff00'; // Yellow for known composites
+                    } else {
+                        ctx.fillStyle = '#00ff00'; // Green for untested candidates
+                    }
+                }
+                
+                ctx.fill();
+                
+                // Highlight known primes with larger circles
+                if (point.isKnownPrime) {
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            });
+
+            // Draw axes labels
+            ctx.fillStyle = '#00ff88';
+            ctx.font = '12px Courier New';
+            ctx.textAlign = 'center';
+            
+            // X-axis label
+            ctx.fillText('Powers (x) for 2^x - 1', canvas.width / 2, canvas.height - 10);
+            
+            // Y-axis label
+            ctx.save();
+            ctx.translate(15, canvas.height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Dart-69 Wheel Position', 0, 0);
+            ctx.restore();
+            
+            // Y-axis position labels
+            ctx.textAlign = 'right';
+            for (let pos = 0; pos < 69; pos += 10) {
+                const y = margin + pos * yScale;
+                ctx.fillText(pos.toString(), margin - 10, y + 4);
+            }
+        }
+
+        function updateAnalysis() {
+            const analysisDiv = document.getElementById('analysisResults');
+            
+            // Count patterns
+            const totalPoints = intersectionData.length;
+            const knownPrimes = intersectionData.filter(d => d.isKnownPrime).length;
+            const forbiddenHits = intersectionData.filter(d => d.isForbidden).length;
+            const allowedPositions = intersectionData.filter(d => !d.isForbidden).length;
+            
+            // Position frequency analysis
+            const positionCounts = {};
+            const primePositions = {};
+            
+            intersectionData.forEach(point => {
+                positionCounts[point.position] = (positionCounts[point.position] || 0) + 1;
+                if (point.isKnownPrime) {
+                    primePositions[point.position] = (primePositions[point.position] || 0) + 1;
+                }
+            });
+
+            // Find most common positions for Mersenne primes
+            const primePositionsList = Object.entries(primePositions)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            let analysis = `
+                <h3>🔍 Intersection Pattern Analysis</h3>
+                <div class="mersenne-list">
+                    <strong>Statistics:</strong><br>
+                    • Total powers tested: ${totalPoints.toLocaleString()}<br>
+                    • Known Mersenne primes: ${knownPrimes}<br>
+                    • Mersenne numbers in forbidden zones: ${forbiddenHits} (${(forbiddenHits/totalPoints*100).toFixed(1)}%)<br>
+                    • Mersenne numbers in allowed zones: ${allowedPositions} (${(allowedPositions/totalPoints*100).toFixed(1)}%)<br><br>
+                    
+                    <strong>Dart-69 Positions with Most Mersenne Primes:</strong><br>
+            `;
+
+            primePositionsList.forEach(([pos, count]) => {
+                const angle = pos * (360 / 69);
+                analysis += `• Position ${pos} (${angle.toFixed(1)}°): ${count} Mersenne primes<br>`;
+            });
+
+            // Check if any known Mersenne primes are in forbidden zones
+            const forbiddenPrimes = intersectionData.filter(d => d.isKnownPrime && d.isForbidden);
+            
+            if (forbiddenPrimes.length > 0) {
+                analysis += `<br><strong>⚠️ Forbidden Zone Violations:</strong><br>`;
+                forbiddenPrimes.forEach(prime => {
+                    analysis += `• 2^${prime.x} - 1 is prime but at forbidden position ${prime.position}<br>`;
+                });
+            } else {
+                analysis += `<br><strong>✅ Perfect Compliance:</strong> No known Mersenne primes in forbidden zones!<br>`;
+            }
+
+            analysis += `</div>`;
+
+            // Prediction section
+            const candidates = intersectionData
+                .filter(d => !d.isKnownPrime && !d.isForbidden && d.x > Math.max(...knownMersennePrimes))
+                .slice(0, 20);
+
+            if (candidates.length > 0) {
+                analysis += `
+                    <div class="pattern-prediction">
+                        <strong>🎯 Prime Candidates to Test (x > ${Math.max(...knownMersennePrimes)}):</strong><br>
+                        Next 20 candidates in allowed dart-69 positions:<br>
+                `;
+                
+                candidates.forEach(candidate => {
+                    analysis += `• 2^${candidate.x} - 1 (position ${candidate.position}, ${candidate.angle.toFixed(1)}°)<br>`;
+                });
+                
+                analysis += `</div>`;
+            }
+
+            analysisDiv.innerHTML = analysis;
+        }
+        
+        function handleMouseMove(event) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+            
+            // Find the closest data point
+            const maxPower = Math.max(...intersectionData.map(d => d.x));
+            const zoom = parseInt(document.getElementById('zoomLevel').value);
+            const margin = 60;
+            const chartWidth = canvas.width - 2 * margin;
+            const chartHeight = canvas.height - 2 * margin;
+            const xScale = chartWidth / maxPower * zoom;
+            const yScale = chartHeight / 69;
+            
+            let closestPoint = null;
+            let minDistance = Infinity;
+            
+            intersectionData.forEach(point => {
+                const x = margin + point.x * xScale;
+                const y = margin + point.position * yScale;
+                
+                if (x > canvas.width - margin) return; // Skip if off screen
+                
+                const distance = Math.sqrt((mouseX - x) ** 2 + (mouseY - y) ** 2);
+                
+                if (distance < 10 && distance < minDistance) { // Within 10 pixels
+                    minDistance = distance;
+                    closestPoint = point;
+                }
+            });
+            
+            if (closestPoint) {
+                showTooltip(event, closestPoint);
+            } else {
+                hideTooltip();
+            }
+        }
+        
+        function showTooltip(event, point) {
+            const rect = canvas.getBoundingClientRect();
+            
+            let tooltipContent = `<strong>2^${point.x} - 1</strong><br>`;
+            tooltipContent += `Position: ${point.position}<br>`;
+            tooltipContent += `Angle: ${point.angle.toFixed(2)}°<br>`;
+            
+            if (point.isKnownPrime) {
+                tooltipContent += `<span style="color: #ff4444;">✓ KNOWN MERSENNE PRIME</span><br>`;
+                // Add discovery year if available
+                const primeData = knownMersennePrimes.find(p => p === point.x);
+                if (primeData) {
+                    tooltipContent += `Discovered: Ancient/Historical`;
+                }
+            } else if (point.isForbidden) {
+                tooltipContent += `<span style="color: #ff00ff;">✗ Forbidden Zone</span>`;
+            } else {
+                if (point.x <= 1000) {
+                    tooltipContent += `<span style="color: #ffff00;">? Known Composite</span>`;
+                } else {
+                    tooltipContent += `<span style="color: #00ff00;">? Untested Candidate</span>`;
+                }
+            }
+            
+            tooltip.innerHTML = tooltipContent;
+            tooltip.style.display = 'block';
+            tooltip.style.left = (event.clientX + 10) + 'px';
+            tooltip.style.top = (event.clientY - 10) + 'px';
+        }
+        
+        function hideTooltip() {
+            tooltip.style.display = 'none';
+        }
+
+        function analyzePredictions() {
+            const maxPower = parseInt(document.getElementById('maxPower').value);
+            
+            // Find patterns in known Mersenne primes
+            const primeData = intersectionData.filter(d => d.isKnownPrime);
+            
+            console.log('Analyzing patterns in known Mersenne primes...');
+            console.log('Known Mersenne prime positions:', primeData.map(d => d.position));
+            
+            // Look for position patterns
+            const positionPattern = primeData.map(d => d.position);
+            const uniquePositions = [...new Set(positionPattern)];
+            
+            alert(`Pattern Analysis:\n` +
+                  `Known Mersenne primes appear at ${uniquePositions.length} different dart-69 positions:\n` +
+                  `${uniquePositions.sort((a,b) => a-b).join(', ')}\n\n` +
+                  `This represents ${(uniquePositions.length/46*100).toFixed(1)}% of allowed positions.\n` +
+                  `Check the analysis section for detailed predictions!`);
+        }
+
+        function exportCandidates() {
+            const candidates = intersectionData
+                .filter(d => !d.isKnownPrime && !d.isForbidden)
+                .sort((a, b) => a.x - b.x);
+            
+            let exportText = "# Mersenne Prime Candidates from Dart-69 Analysis\n";
+            exportText += "# Format: power, position, angle\n\n";
+            
+            candidates.forEach(candidate => {
+                exportText += `${candidate.x}, ${candidate.position}, ${candidate.angle.toFixed(2)}\n`;
+            });
+            
+            // Create download
+            const blob = new Blob([exportText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'mersenne_candidates_dart69.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Update zoom display
+        document.getElementById('zoomLevel').addEventListener('input', function(e) {
+            document.getElementById('zoomValue').textContent = e.target.value + 'x';
+            if (intersectionData.length > 0) {
+                drawChart();
+            }
+        });
+
+        // Initialize
+        initCanvas();
+        
+        // Generate initial map
+        setTimeout(() => {
+            generateMap();
+        }, 500);
+    </script>
+</body>
+</html>
